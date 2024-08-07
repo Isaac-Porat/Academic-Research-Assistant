@@ -24,13 +24,14 @@ def scrape_google_scholar(query, page_count):
             citation = post.find("div", class_="gs_a").text
             description = post.find("div", class_="gs_rs").text
             url = post.find("a")["href"]
+
             data.append([title, citation, description, url])
 
     return data
 
 def main():
     query = "machinelearning"
-    page_count = 4
+    page_count = 1
 
     data = scrape_google_scholar(query, page_count)
 
