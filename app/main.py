@@ -1,26 +1,41 @@
 import requests
 from bs4 import BeautifulSoup
-import pandas
+import pandas as pd
 
-url = "https://scholar.google.com/scholar?hl=en&as_sdt=0,11&q=machine+learning&oq="
+def scrape_google_scholar(query, page_count):
+    base_url = "https://scholar.google.com/scholar"
+    data = []
 
-r = requests.get(url)
+    for page in range(page_count):
+        start = page * 10
+        params = {
+            "q": query,
+            "hl": "en",
+            "as_sdt": "0,11",
+            "start": start
+        }
 
-soup = BeautifulSoup(r.text, 'html.parser')
+        response = requests.get(base_url, params=params)
+        soup = BeautifulSoup(response.text, 'html.parser')
+        posts = soup.find_all(class_="gs_ri")
 
-posts = soup.find_all(class_="gs_ri")
+        for post in posts:
+            title = post.find("h3", class_="gs_rt").text
+            citation = post.find("div", class_="gs_a").text
+            description = post.find("div", class_="gs_rs").text
+            url = post.find("a")["href"]
+            data.append([title, citation, description, url])
 
-for post in posts:
-    title = post.find("h3", class_="gs_rt").text
-    citation = post.find("div", class_="gs_a").text
-    description = post.find("div", class_="gs_rs").text
-    url = post.find("a")["href"]
+    return data
 
-    data = {
-        "title": title,
-        "citation": citation,
-        "description": description,
-        "url": url
-    }
+def main():
+    query = "machinelearning"
+    page_count = 4
 
-    print(data)
+    data = scrape_google_scholar(query, page_count)
+
+    df = pd.DataFrame(data, columns=["title", "citation", "description", "url"])
+    df.to_csv(f"{query}.csv", index=False)
+
+if __name__ == "__main__":
+    main()
